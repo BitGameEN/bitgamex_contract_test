@@ -1,0 +1,23 @@
+{
+    [
+        '../test/*',
+        '../src/deps/jiffy/src/*',
+        '../src/deps/jsonrpc2-erlang/src/*',
+        '../src/deps/gun/src/*',
+        '../src/*',
+        '../src/mod/*',
+        '../src/lib/*'
+    ]
+    ,[
+        debug_info
+        ,{parse_transform, lager_transform}
+        ,{lager_truncation_size, 1024}
+        ,{i, "../include"}
+        ,{outdir, "../ebin"}
+        ,{d, debug}
+        ,nowarn_unused_function
+        ,nowarn_unused_vars
+        %,native
+        %,{hipe, [to_llvm]}
+    ]
+}.
