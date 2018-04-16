@@ -23,11 +23,13 @@
 
 -export([request/4]).
 -export([response/3]).
+-export([headers/1]).
 -export([version/1]).
 
 -type version() :: 'HTTP/1.0' | 'HTTP/1.1'.
 -type status() :: 100..999.
 -type headers() :: [{binary(), iodata()}].
+-export_type([headers/0]).
 
 -include("cow_inline.hrl").
 
@@ -143,16 +145,32 @@ parse_hd_value(<< $\r, Rest/bits >>, Acc, Name, SoFar) ->
 		<< $\n, C, Rest2/bits >> when C =:= $\s; C =:= $\t ->
 			parse_hd_value(Rest2, Acc, Name, << SoFar/binary, C >>);
 		<< $\n, Rest2/bits >> ->
-			parse_header(Rest2, [{Name, SoFar}|Acc])
+			Value = clean_value_ws_end(SoFar, byte_size(SoFar) - 1),
+			parse_header(Rest2, [{Name, Value}|Acc])
 	end;
 parse_hd_value(<< C, Rest/bits >>, Acc, Name, SoFar) ->
 	parse_hd_value(Rest, Acc, Name, << SoFar/binary, C >>).
+
+%% This function has been copied from cowboy_http.
+clean_value_ws_end(_, -1) ->
+	<<>>;
+clean_value_ws_end(Value, N) ->
+	case binary:at(Value, N) of
+		$\s -> clean_value_ws_end(Value, N - 1);
+		$\t -> clean_value_ws_end(Value, N - 1);
+		_ ->
+			S = N + 1,
+			<< Value2:S/binary, _/bits >> = Value,
+			Value2
+	end.
 
 -ifdef(TEST).
 parse_headers_test_() ->
 	Tests = [
 		{<<"\r\nRest">>,
 			{[], <<"Rest">>}},
+		{<<"Server: Erlang/R17  \r\n\r\n">>,
+			{[{<<"server">>, <<"Erlang/R17">>}], <<>>}},
 		{<<"Server: Erlang/R17\r\n"
 			"Date: Sun, 23 Feb 2014 09:30:39 GMT\r\n"
 			"Multiline-Header: why hello!\r\n"
@@ -253,8 +271,11 @@ request(Method, Path, Version, Headers) ->
 -spec response(status() | binary(), version(), headers()) -> iodata().
 response(Status, Version, Headers) ->
 	[version(Version), <<" ">>, status(Status), <<"\r\n">>,
-		[[N, <<": ">>, V, <<"\r\n">>] || {N, V} <- Headers],
-		<<"\r\n">>].
+		headers(Headers), <<"\r\n">>].
+
+-spec headers(headers()) -> iodata().
+headers(Headers) ->
+	[[N, <<": ">>, V, <<"\r\n">>] || {N, V} <- Headers].
 
 %% @doc Return the version as a binary.
 
@@ -293,6 +314,7 @@ status(304) -> <<"304 Not Modified">>;
 status(305) -> <<"305 Use Proxy">>;
 status(306) -> <<"306 Switch Proxy">>;
 status(307) -> <<"307 Temporary Redirect">>;
+status(308) -> <<"308 Permanent Redirect">>;
 status(400) -> <<"400 Bad Request">>;
 status(401) -> <<"401 Unauthorized">>;
 status(402) -> <<"402 Payment Required">>;
@@ -312,6 +334,7 @@ status(415) -> <<"415 Unsupported Media Type">>;
 status(416) -> <<"416 Requested Range Not Satisfiable">>;
 status(417) -> <<"417 Expectation Failed">>;
 status(418) -> <<"418 I'm a teapot">>;
+status(421) -> <<"421 Misdirected Request">>;
 status(422) -> <<"422 Unprocessable Entity">>;
 status(423) -> <<"423 Locked">>;
 status(424) -> <<"424 Failed Dependency">>;
@@ -320,6 +343,7 @@ status(426) -> <<"426 Upgrade Required">>;
 status(428) -> <<"428 Precondition Required">>;
 status(429) -> <<"429 Too Many Requests">>;
 status(431) -> <<"431 Request Header Fields Too Large">>;
+status(451) -> <<"451 Unavailable For Legal Reasons">>;
 status(500) -> <<"500 Internal Server Error">>;
 status(501) -> <<"501 Not Implemented">>;
 status(502) -> <<"502 Bad Gateway">>;
