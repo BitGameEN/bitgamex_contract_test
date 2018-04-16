@@ -5,6 +5,7 @@
         '../src/deps/jsonrpc2-erlang/src/*',
         '../src/deps/gun/src/*',
         '../src/deps/erthereum/src/*',
+        '../src/deps/ct_helper/src/*',
         '../src/*',
         '../src/mod/*',
         '../src/lib/*'

@@ -1,5 +1,5 @@
 cd ../ebin
 rm *.beam
 rm erl_crash.dump
-rm log*/*
-rm log*/*/*
+rm -rf log*/*
+rm -rf log*/*/*
