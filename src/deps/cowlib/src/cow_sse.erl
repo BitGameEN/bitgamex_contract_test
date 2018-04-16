@@ -28,11 +28,12 @@
 -type state() :: #state{}.
 -export_type([state/0]).
 
--type event() :: #{
-	last_event_id := binary(),
-	event_type := binary(),
-	data := iolist()
-}.
+%-type event() :: #{
+%	last_event_id := binary(),
+%	event_type := binary(),
+%	data := iolist()
+%}.
+-type event() :: map().
 
 -spec init() -> state().
 init() ->
