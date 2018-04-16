@@ -4,6 +4,7 @@
         '../src/deps/jiffy/src/*',
         '../src/deps/jsonrpc2-erlang/src/*',
         '../src/deps/gun/src/*',
+        '../src/deps/erthereum/src/*',
         '../src/*',
         '../src/mod/*',
         '../src/lib/*'
