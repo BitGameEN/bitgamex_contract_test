@@ -3,6 +3,8 @@
         '../test/*',
         '../src/deps/jiffy/src/*',
         '../src/deps/jsonrpc2-erlang/src/*',
+        '../src/deps/ranch/src/*',
+        '../src/deps/cowlib/src/*',
         '../src/deps/gun/src/*',
         '../src/deps/erthereum/src/*',
         '../src/deps/ct_helper/src/*',
@@ -15,6 +17,7 @@
         ,{parse_transform, lager_transform}
         ,{lager_truncation_size, 1024}
         ,{i, "../include"}
+        ,{i, "../src/deps/cowlib/include"}
         ,{outdir, "../ebin"}
         ,{d, debug}
         ,nowarn_unused_function

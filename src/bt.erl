@@ -5,7 +5,7 @@
 -module(bt).
 -export([test_start/0, test_stop/0]).
 
--define(TEST_APPS, [sasl, bitgamex_contract_test]).
+-define(TEST_APPS, [sasl, bitgamex_contract_test, gun]).
 
 -include("common.hrl").
 
@@ -14,7 +14,14 @@
 test_start() ->
     try
         ok = application:start(crypto),
+        % ssl
+        ok = application:start(asn1),
+        ok = application:start(public_key),
+        ok = application:start(ssl),
+        % ssl-end
         ok = lager:start(),
+        ok = application:start(ranch),
+        ok = application:start(cowlib),
         ok = start_applications(?TEST_APPS)
     after
         timer:sleep(100)
