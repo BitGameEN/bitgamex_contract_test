@@ -1,0 +1,8 @@
+vi .bash_profile
+export PATH="/Users/guli1/Library/Application Support/Ethereum Wallet/binaries/Geth/unpacked:$PATH"
+source .bash_profile
+
+geth --rpc --rpcapi eth,net,web3,personal --rpcport 8545 --dev --minerthreads 1 --ipcpath /Users/guli1/Library/Ethereum/geth.ipc
+geth attach
+
+先手动启动geth后，再启动Ethereum Wallet
