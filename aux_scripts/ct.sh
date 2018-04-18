@@ -1,2 +1,3 @@
 #!/bin/sh
-ct_run -spec '../ct/spec.spec' -erl_args -pa '../../ebin'
+cd ../ebin
+ct_run -pa '.' -include '../include' -spec '../ct/spec.spec'

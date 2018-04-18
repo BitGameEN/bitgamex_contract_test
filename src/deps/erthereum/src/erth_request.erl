@@ -23,9 +23,11 @@ request({MethodName, MethodId}, MethodArgs) when is_binary(MethodName) ->
                          Encoded),
     case gun:await(ConnPid, StreamRef) of
         {response, fin, _, _} ->
+            gun:close(ConnPid),
             {error, failed};
         {response, nofin, _, _} ->
             {ok, Response} = gun:await_body(ConnPid, StreamRef),
+            gun:close(ConnPid),
             case jiffy:decode(Response) of
                 {Decoded} ->
                     process_decoded_body(Decoded);
