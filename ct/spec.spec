@@ -1,3 +1,3 @@
 {alias, ct, "../ct/"}.
-{logdir, "../ebin/logs_bitgamex_contract_test/"}.
+{logdir, "../ct_logs/"}.
 {suites, ct, all}.
