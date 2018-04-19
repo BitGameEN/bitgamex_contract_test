@@ -8,9 +8,17 @@ all() ->
 groups() ->
     [{buy, [parallel], [test_case_normal]}].
 
-init_per_group(buy, Config) ->
+init_per_suite(Config) ->
     % 启动test
     bt:test_start(),
+    Config.
+
+end_per_suite(Config) ->
+    % 停止test
+    bt:test_stop(),
+    ok.
+
+init_per_group(buy, Config) ->
     % 启动geth
     ct:log("starting geth...", []),
     % 先停止geth
@@ -36,12 +44,10 @@ init_per_group(_Name, Config) ->
 
 end_per_group(_Name, _Config) ->
     % 停止geth（放在初始化）
-    % 停止test
-    bt:test_stop(),
     ok.
 
 test_case_normal(Config) ->
-    % 按合约里兑换比率和软顶，在第一阶段打入44000个eth，即结束软顶
+    % 按合约里兑换比率和软顶，在第一阶段打入11000个eth，即结束软顶
     ok.
 
 distribute_ETH(AccountList) ->
@@ -84,7 +90,15 @@ deploy_contract(AccountList) ->
     PreIcoAddrs = list_to_binary(util:implode(", ", PreIcoAddrList)),
     C = binary:replace(C6, <<"$PREICO_ADDRS">>, PreIcoAddrs),
     ct:log("refilled contract: ~ts~n", [C]),
-    % 编译
-    %Contract = eth.compile.solidity(C),
+    % 编译合约
+    %eth_compileSolidity are gone in go-ethereum 1.6.0
+    %The method eth_compileSolidity does not exist/is not available
+    %{ok, Contract} = erthereum:eth_compileSolidity(C),
+    file:write_file("refilled_bgx.sol", C),
+    os:cmd("solcjs -o . --bin --abi refilled_bgx.sol"),
+    {ok, Contract} = file:read_file("refilled_bgx_sol_BGCToken.bin"),
+    % 部署合约
+    {ok, MainAccountAddr} = erthereum:eth_coinbase(),
+    {ok, _} = erthereum:eth_deployContract(MainAccountAddr, <<"0x", Contract/binary>>),
     ok.
 

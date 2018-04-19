@@ -8,6 +8,8 @@
          eth_getBalance/1, eth_getBalance/2,
          eth_accounts/0,
          eth_coinbase/0,
+         eth_compileSolidity/1,
+         eth_deployContract/2,
          eth_sendTransaction/3]).
 %% personal namespace
 -export([personal_newAccount/1,
@@ -72,10 +74,25 @@ eth_getBalance(Address, BlockNumberOrTag0) ->
 eth_accounts() ->
     maybe_list(request(eth_accounts)).
 
-%% Returns the 1st account
+%% Returns the client coinbase address.
 -spec eth_coinbase() -> {ok, address()} | {error, error()}.
 eth_coinbase() ->
     request(eth_coinbase).
+
+%% Returns compiled solidity code.
+-spec eth_compileSolidity(SourceCode :: binary()) -> {ok, binary()} | {error, error()}.
+eth_compileSolidity(SourceCode) ->
+    request(eth_compileSolidity, [SourceCode]).
+
+-spec eth_deployContract(FromAddress :: address(),
+                          Data :: data()) -> {ok, TransactionHash :: data()} | {error, error()}.
+eth_deployContract(FromAddress, Data) ->
+    Params = [{[
+                   {<<"from">>, FromAddress},
+                   {<<"data">>, Data},
+                   {<<"gas">>, <<"0xf4240">>}
+               ]}],
+    maybe_binary(request(eth_sendTransaction, Params)).
 
 %% Creates new message call transaction or a contract creation, if the data field contains code
 -spec eth_sendTransaction(FromAddress :: address(),
@@ -185,6 +202,8 @@ management_api_data(eth_coinbase) ->
     {<<"eth_coinbase">>, 64};
 management_api_data(eth_accounts) ->
     {<<"eth_accounts">>, 1};
+management_api_data(eth_compileSolidity) ->
+    {<<"eth_compileSolidity">>, 1};
 management_api_data(eth_sendTransaction) ->
     {<<"eth_sendTransaction">>, 1}.
 
