@@ -7,6 +7,7 @@
 -export([eth_blockNumber/0,
          eth_getBalance/1, eth_getBalance/2,
          eth_accounts/0,
+         eth_coinbase/0,
          eth_sendTransaction/3]).
 %% personal namespace
 -export([personal_newAccount/1,
@@ -70,6 +71,11 @@ eth_getBalance(Address, BlockNumberOrTag0) ->
 -spec eth_accounts() -> {ok, list(address())} | {error, error()}.
 eth_accounts() ->
     maybe_list(request(eth_accounts)).
+
+%% Returns the 1st account
+-spec eth_coinbase() -> {ok, address()} | {error, error()}.
+eth_coinbase() ->
+    request(eth_coinbase).
 
 %% Creates new message call transaction or a contract creation, if the data field contains code
 -spec eth_sendTransaction(FromAddress :: address(),
@@ -162,6 +168,7 @@ to_wei({ether, _} = Ether)           -> to_wei(convert(Ether));
 to_wei({wei, Wei})                   -> Wei;
 to_wei(Value) when is_integer(Value) -> Value.
 
+%% https://github.com/ethereum/wiki/wiki/JSON-RPC
 -spec management_api_data(Method :: management_api_method())
         -> {method_name(), method_id()} | method_name().
 management_api_data(net_version) ->
@@ -174,6 +181,8 @@ management_api_data(personal_newAccount) ->
     <<"personal_newAccount">>;
 management_api_data(personal_unlockAccount) ->
     <<"personal_unlockAccount">>;
+management_api_data(eth_coinbase) ->
+    {<<"eth_coinbase">>, 64};
 management_api_data(eth_accounts) ->
     {<<"eth_accounts">>, 1};
 management_api_data(eth_sendTransaction) ->

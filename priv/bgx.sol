@@ -9,19 +9,19 @@ contract BGCToken {
 
     uint256 baseTokenPerETH = 50000; // 无优惠时的兑换比率
 
-    address ethFundAddress  = 0x0; //以太坊轉存地址
-    address[] foundationAddresses = [0x0]; // 基金会地址，15个
-    address[] teamAddresses = [0x0]; // 团队地址，15个
-    address[] miningAddresses = [0x0]; // 挖矿地址，2个
-    address[] cornerstoneAddresses = [0x0]; // 基石私募地址，10个
-    address[] preIcoAddresses = [0x0]; // PreICO地址，5个
+    address ethFundAddress  = $ETH_FUND_ADDR; //以太坊轉存地址
+    address[] foundationAddresses = [$FOUNDATION_ADDRS]; // 基金会地址，15个
+    address[] teamAddresses = [$TEAM_ADDRS]; // 团队地址，15个
+    address[] miningAddresses = [$MINING_ADDRS]; // 挖矿地址，2个
+    address[] cornerstoneAddresses = [$CORNERSTONE_ADDRS]; // 基石私募地址，10个
+    address[] preIcoAddresses = [$PREICO_ADDRS]; // PreICO地址，5个
 
-    uint256 startTime = 1522135518; // 开始时间戳，UTC-0
-    uint256 stage1Seconds = 600; // 10% bonus
-    uint256 stage2Seconds = 600; // 5% bonus
-    uint256 stage3Seconds = 600; // 0 bonus
-    uint256 stage4Seconds = 600; // -5% bonus
-    uint256 stage5Seconds = 600; // -10% bonus
+    uint256 startTime = $START_TIME; // 开始时间戳，UTC-0
+    uint256 stage1Seconds = 120; // 10% bonus
+    uint256 stage2Seconds = 120; // 5% bonus
+    uint256 stage3Seconds = 120; // 0 bonus
+    uint256 stage4Seconds = 120; // -5% bonus
+    uint256 stage5Seconds = 120; // -10% bonus
 
     //uint256 startTime = 1525017600; // 开始时间戳，2018/4/30 0:0:0 UTC-0
     //uint256 stage1Seconds = 3 * 24 * 3600; // 10% bonus，4.30 - 5.2
