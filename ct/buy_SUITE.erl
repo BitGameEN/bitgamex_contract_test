@@ -23,7 +23,7 @@ init_per_group(buy, Config) ->
     ct:log("starting geth...", []),
     % 先停止geth
     os:cmd("ps -efww|grep \"geth\"|grep -v grep|grep -v attach|tr -s ' '|cut -d ' ' -f 3|xargs kill -9"),
-    spawn(fun() -> os:cmd("mkdir eth; geth --datadir ./eth/ --rpc --rpcapi eth,net,web3,personal --rpcport 8545 --dev --mine --minerthreads 1 --ipcpath /Users/guli1/Library/Ethereum/geth.ipc 2 >> ./eth/eth.log") end),
+    spawn(fun() -> os:cmd("mkdir eth; geth --datadir ./eth/ --rpc --rpcapi eth,net,web3,personal --rpcport 8545 --dev --mine --minerthreads 1 --ipcpath /Users/guli1/Library/Ethereum/geth.ipc 2>>./eth/eth.log") end),
     ct:log("waiting 5 seconds...", []),
     timer:sleep(5000),
     % 创建100个账号
@@ -100,6 +100,8 @@ deploy_contract(AccountList) ->
     % 部署合约
     {ok, MainAccountAddr} = erthereum:eth_coinbase(),
     {ok, TransactionHash} = erthereum:eth_deployContract(MainAccountAddr, <<"0x", Contract/binary>>),
+    ct:log("contract creating transaction hash: ~s~n", [TransactionHash]),
+    timer:sleep(5000),
     {ok, TransactionReceipt} = erthereum:eth_getTransactionReceipt(TransactionHash),
     ct:log("contract info: ~p~n", [TransactionReceipt]),
     ok.
