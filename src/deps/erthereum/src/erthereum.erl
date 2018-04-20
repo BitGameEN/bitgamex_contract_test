@@ -10,7 +10,8 @@
          eth_coinbase/0,
          eth_compileSolidity/1,
          eth_deployContract/2,
-         eth_sendTransaction/3]).
+         eth_sendTransaction/3,
+         eth_getTransactionReceipt/1]).
 %% personal namespace
 -export([personal_newAccount/1,
          personal_unlockAccount/2]).
@@ -35,6 +36,20 @@
 -type data() :: binary().
 -type wei() :: {wei, integer()}.
 -type ether() :: {ether, number()}.
+
+-type json_value() :: null
+                    | true
+                    | false
+                    | json_string()
+                    | json_number()
+                    | json_object()
+                    | json_array().
+
+-type json_array()  :: [json_value()].
+-type json_string() :: atom() | binary().
+-type json_number() :: integer() | float().
+
+-type json_object() :: {[{json_string(),json_value()}]}.
 
 %% Type exports
 -export_type([error/0]).
@@ -107,6 +122,9 @@ eth_sendTransaction(FromAddress, ToAddress, Value0) ->
                ]}],
     maybe_binary(request(eth_sendTransaction, Params)).
 
+-spec eth_getTransactionReceipt(TransactionHash :: data()) -> {ok, TransactionReceipt :: json_object()} | {error, error()}.
+eth_getTransactionReceipt(TransactionHash) ->
+    maybe_object(request(eth_getTransactionReceipt, [TransactionHash])).
 
 %% Generates a new private key and stores it in the key storese directory.
 %% The key file is encrypted with the given passphrase.
@@ -172,6 +190,11 @@ maybe_list({error, _} = Error) -> Error;
 maybe_list({ok, L}) when is_list(L) ->
     {ok, L}.
 
+-spec maybe_object({ok, json_object()} | error()) -> {ok, json_object()} | error().
+maybe_object({error, _} = Error) -> Error;
+maybe_object({ok, {[_|_]} = Dic}) ->
+    {ok, Dic}.
+
 -spec maybe_boolean({ok, boolean()} | error()) -> {ok, boolean()} | error().
 maybe_boolean({error, _} = Error) -> Error;
 maybe_boolean({ok, B}) when is_boolean(B) -> {ok, B}.
@@ -205,7 +228,9 @@ management_api_data(eth_accounts) ->
 management_api_data(eth_compileSolidity) ->
     {<<"eth_compileSolidity">>, 1};
 management_api_data(eth_sendTransaction) ->
-    {<<"eth_sendTransaction">>, 1}.
+    {<<"eth_sendTransaction">>, 1};
+management_api_data(eth_getTransactionReceipt) ->
+    {<<"eth_getTransactionReceipt">>, 1}.
 
 
 
