@@ -12,3 +12,5 @@ Ethereum Wallet删除CustomContracts：
 开发者工具->钱包界面->console
 CustomContracts.find().fetch()
 CustomContracts.remove(_id)
+Transactions.find().fetch()
+Transactions.remove(_id)
