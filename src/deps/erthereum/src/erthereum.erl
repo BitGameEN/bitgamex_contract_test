@@ -106,7 +106,9 @@ eth_deployContract(FromAddress, Data) ->
     Params = [{[
                    {<<"from">>, FromAddress},
                    {<<"data">>, Data},
-                   {<<"gas">>, <<"0xf4240">>}
+                   {<<"value">>, <<"0x0">>},
+                   {<<"gasPrice">>, <<"0x174876e800">>},
+                   {<<"gas">>, <<"0x5b8d80">>} % 要>53000，同时要小于当前块的gasLimit，并且保证足够多，否则耗尽gas导致合约不能创建成功
                ]}],
     maybe_binary(request(eth_sendTransaction, Params)).
 
