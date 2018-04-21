@@ -6,3 +6,9 @@ geth --rpc --rpcapi eth,net,web3,personal --rpcport 8545 --dev --minerthreads 1 
 geth attach
 
 先手动启动geth后，再启动Ethereum Wallet
+
+
+Ethereum Wallet删除CustomContracts：
+开发者工具->钱包界面->console
+CustomContracts.find().fetch()
+CustomContracts.remove(_id)

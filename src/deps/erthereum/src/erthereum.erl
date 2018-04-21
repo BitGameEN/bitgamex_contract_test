@@ -10,6 +10,7 @@
          eth_coinbase/0,
          eth_compileSolidity/1,
          eth_deployContract/2,
+         eth_callContract/3,
          eth_sendTransaction/3,
          eth_getTransactionReceipt/1]).
 %% personal namespace
@@ -100,12 +101,23 @@ eth_compileSolidity(SourceCode) ->
     request(eth_compileSolidity, [SourceCode]).
 
 -spec eth_deployContract(FromAddress :: address(),
-                          Data :: data()) -> {ok, TransactionHash :: data()} | {error, error()}.
+                         Data :: data()) -> {ok, TransactionHash :: data()} | {error, error()}.
 eth_deployContract(FromAddress, Data) ->
     Params = [{[
                    {<<"from">>, FromAddress},
                    {<<"data">>, Data},
                    {<<"gas">>, <<"0xf4240">>}
+               ]}],
+    maybe_binary(request(eth_sendTransaction, Params)).
+
+-spec eth_callContract(FromAddress :: address(),
+                       ContractAddress :: address(),
+                       Data :: data()) -> {ok, TransactionHash :: data()} | {error, error()}.
+eth_callContract(FromAddress, ContractAddress, Data) ->
+    Params = [{[
+                   {<<"from">>, FromAddress},
+                   {<<"to">>, ContractAddress},
+                   {<<"data">>, Data}
                ]}],
     maybe_binary(request(eth_sendTransaction, Params)).
 

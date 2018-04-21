@@ -23,6 +23,7 @@ init_per_group(buy, Config) ->
     ct:log("starting geth...", []),
     % 先停止geth
     os:cmd("ps -efww|grep \"geth\"|grep -v grep|grep -v attach|tr -s ' '|cut -d ' ' -f 3|xargs kill -9"),
+    % 如果要区块高度一直增高，启动geth时加入--dev.period 1（但会白耗CPU），否则只靠交易驱动挖矿
     spawn(fun() -> os:cmd("mkdir eth; geth --datadir ./eth/ --rpc --rpcapi eth,net,web3,personal --rpcport 8545 --dev --mine --minerthreads 1 --ipcpath /Users/guli1/Library/Ethereum/geth.ipc 2>>./eth/eth.log") end),
     ct:log("waiting 5 seconds...", []),
     timer:sleep(5000),
@@ -33,12 +34,12 @@ init_per_group(buy, Config) ->
              ct:log("account ~p created: ~p~n", [I, Addr]),
              {I, Addr}
          end || I <- lists:seq(1, 100)],
-    % 主账号向100个账号划拨ETH
-    distribute_ETH(L),
     % 发布智能合约
     ct:log("deploying contract...", []),
-    deploy_contract(L),
-    [{accounts, L} | Config];
+    {ok, ContractAddr} = deploy_contract(L),
+    % 主账号向100个账号划拨ETH
+    distribute_ETH(L),
+    [{accounts, L}, {contract_addr, ContractAddr} | Config];
 init_per_group(_Name, Config) ->
     Config.
 
@@ -47,6 +48,9 @@ end_per_group(_Name, _Config) ->
     ok.
 
 test_case_normal(Config) ->
+    % 先检查各地址预留的数量正确
+    {ok, MainAccountAddr} = erthereum:eth_coinbase(),
+    %{ok, } = erthereum:(MainAccountAddr),
     % 按合约里兑换比率和软顶，在第一阶段打入11000个eth，即结束软顶
     ok.
 
@@ -102,7 +106,8 @@ deploy_contract(AccountList) ->
     {ok, TransactionHash} = erthereum:eth_deployContract(MainAccountAddr, <<"0x", Contract/binary>>),
     ct:log("contract creating transaction hash: ~s~n", [TransactionHash]),
     timer:sleep(5000),
-    {ok, TransactionReceipt} = erthereum:eth_getTransactionReceipt(TransactionHash),
+    {ok, {TransactionReceipt}} = erthereum:eth_getTransactionReceipt(TransactionHash),
     ct:log("contract info: ~p~n", [TransactionReceipt]),
-    ok.
+    {_, ContractAddr} = lists:keyfind(<<"contractAddress">>, 1, TransactionReceipt),
+    {ok, ContractAddr}.
 

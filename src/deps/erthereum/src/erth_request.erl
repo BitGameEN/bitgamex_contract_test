@@ -21,6 +21,7 @@ request({MethodName, MethodId}, MethodArgs) when is_binary(MethodName) ->
     StreamRef = gun:post(ConnPid, "/",
                          [{<<"content-type">>, <<"application/json">>}],
                          Encoded),
+    ct:log("request:~n~p~n", [Encoded]),
     case gun:await(ConnPid, StreamRef) of
         {response, fin, _, _} ->
             gun:close(ConnPid),
