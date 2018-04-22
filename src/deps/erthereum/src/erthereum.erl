@@ -10,7 +10,7 @@
          eth_coinbase/0,
          eth_compileSolidity/1,
          eth_deployContract/2,
-         eth_callContract/3,
+         eth_callContract/4,
          eth_sendTransaction/3,
          eth_getTransactionReceipt/1]).
 %% personal namespace
@@ -114,14 +114,19 @@ eth_deployContract(FromAddress, Data) ->
 
 -spec eth_callContract(FromAddress :: address(),
                        ContractAddress :: address(),
-                       Data :: data()) -> {ok, TransactionHash :: data()} | {error, error()}.
-eth_callContract(FromAddress, ContractAddress, Data) ->
+                       Data :: data(),
+                       IsLocal ::boolean()) -> {ok, TransactionHash :: data()} | {error, error()}.
+eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
     Params = [{[
                    {<<"from">>, FromAddress},
                    {<<"to">>, ContractAddress},
                    {<<"data">>, Data}
                ]}],
-    maybe_binary(request(eth_sendTransaction, Params)).
+    Method = case IsLocal of
+                 true -> eth_call;
+                 false -> eth_sendTransaction
+             end,
+    maybe_binary(request(Method, Params)).
 
 %% Creates new message call transaction or a contract creation, if the data field contains code
 -spec eth_sendTransaction(FromAddress :: address(),
