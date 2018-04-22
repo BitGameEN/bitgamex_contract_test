@@ -149,11 +149,11 @@ contract BGCToken {
             msg.sender.transfer(msg.value - etherValue);
         }
 
-        // 调用内部转账方法给该地址转相应数量的Token
-        _transfer(contractOwner, msg.sender, tokenValue);
-
         // 转移ETH到指定ETH存币地址
         ethFundAddress.transfer(etherValue);
+
+        // 调用内部转账方法给该地址转相应数量的Token
+        _transfer(contractOwner, msg.sender, tokenValue);
 
         donationCount += 1;
         ethRaised += etherValue;
