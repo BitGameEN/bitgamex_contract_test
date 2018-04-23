@@ -127,11 +127,12 @@ eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
                    {<<"to">>, ContractAddress},
                    {<<"data">>, Data}
                ]}],
-    Method = case IsLocal of
-                 true -> eth_call;
-                 false -> eth_sendTransaction
-             end,
-    maybe_binary(request(Method, case IsLocal of true -> Params ++ [<<"latest">>]; false -> Params end)).
+    case IsLocal of
+        true ->
+            maybe_binary(request(eth_call, Params ++ [<<"latest">>]));
+        false ->
+            maybe_binary(request(eth_sendTransaction, Params))
+    end.
 
 %% Creates new message call transaction or a contract creation, if the data field contains code
 -spec eth_sendTransaction(FromAddress :: address(),
