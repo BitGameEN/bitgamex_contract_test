@@ -16,8 +16,12 @@
 %% personal namespace
 -export([personal_newAccount/1,
          personal_unlockAccount/2]).
+%% web3 namespace
+-export([web3_sha3/1]).
 
 -export([convert/1]).
+
+-include("common.hrl").
 
 %% Type definitions.
 -type error() :: failed | decoding_failed.
@@ -117,6 +121,7 @@ eth_deployContract(FromAddress, Data) ->
                        Data :: data(),
                        IsLocal ::boolean()) -> {ok, TransactionHash :: data()} | {error, error()}.
 eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
+    ?DBG("FromAddress:~s~nContractAddress:~s~nData:~s~nIsLocal:~p~n", [FromAddress, ContractAddress, Data, IsLocal]),
     Params = [{[
                    {<<"from">>, FromAddress},
                    {<<"to">>, ContractAddress},
@@ -159,6 +164,11 @@ personal_newAccount(Passphrase) ->
                             -> {ok, address()} | {error, error()}.
 personal_unlockAccount(Address, Passphrase) ->
     maybe_boolean(request(personal_unlockAccount, [Address, Passphrase])).
+
+%% Returns Keccak-256 (not the standardized SHA3-256) of the given data.
+-spec web3_sha3(Data :: data()) -> {ok, data()} | {error, error()}.
+web3_sha3(Data) ->
+    request(web3_sha3, [Data]).
 
 -spec convert(Value :: wei() | ether()) -> wei() | ether().
 convert({ether, Value}) -> {wei, erlang:trunc(Value * ?ETHER_WEI_EXACHANGE_RATE)};
@@ -246,10 +256,12 @@ management_api_data(eth_accounts) ->
     {<<"eth_accounts">>, 1};
 management_api_data(eth_compileSolidity) ->
     {<<"eth_compileSolidity">>, 1};
+management_api_data(eth_call) ->
+    {<<"eth_call">>, 1};
 management_api_data(eth_sendTransaction) ->
     {<<"eth_sendTransaction">>, 1};
 management_api_data(eth_getTransactionReceipt) ->
-    {<<"eth_getTransactionReceipt">>, 1}.
-
-
+    {<<"eth_getTransactionReceipt">>, 1};
+management_api_data(web3_sha3) ->
+    {<<"web3_sha3">>, 64}.
 
