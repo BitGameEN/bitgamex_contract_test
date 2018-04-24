@@ -34,6 +34,7 @@ init_per_group(buy, Config) ->
     ct:log("creating 100 accounts...", []),
     L = [begin
              {ok, Addr} = erthereum:personal_newAccount(<<"test">>),
+             {ok, _Addr} = erthereum:personal_unlockAccount(Addr, <<"test">>),
              ct:log("account ~p created: ~p~n", [I, Addr]),
              {I, Addr}
          end || I <- lists:seq(1, 100)],
