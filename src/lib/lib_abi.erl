@@ -21,12 +21,15 @@ encode_param(<<"address">>, V) -> % uint160
     42 = byte_size(V),
     list_to_binary(string:right(string:to_lower(binary_to_list(binary:part(V, 2, 40))), 64, $0));
 encode_param(<<"uint256">>, V) ->
-    list_to_binary(string:right(integer_to_list(binary_to_integer(V), 16), 64, $0));
+    list_to_binary(string:right(string:to_lower(integer_to_list(binary_to_integer(V), 16)), 64, $0));
 encode_param(<<"bytes">>, V) ->
     % todo: 对于变长类型，先预留32字节给起始地址偏移，然后编码后续字段，等所有字段处理完后再按顺序处理每个变长字段，首先返填地址偏移，再填入字节长度，再填入内容数据
     <<>>;
 encode_param(_, _) ->
     <<>>.
+
+encode_param_with_0x(T, V) ->
+    <<"0x", (encode_param(T, V))/binary>>.
 
 % <<"x,y">>
 concat([], _) ->

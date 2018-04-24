@@ -2,6 +2,9 @@
 -include_lib("common_test/include/ct.hrl").
 -compile(export_all).
 
+% 1亿Token，以最小单位表示（18位小数精度）
+-define(YI, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10).
+
 all() ->
     [{group, buy}].
 
@@ -48,9 +51,8 @@ end_per_group(_Name, _Config) ->
     ok.
 
 test_case_normal(Config) ->
-    % 先检查各地址预留的数量正确
     {ok, MainAccountAddr} = erthereum:eth_coinbase(),
-    %{ok, } = erthereum:(MainAccountAddr),
+    {_, ContractAddr} = lists:keyfind(contract_addr, 1, Config),
     % 按合约里兑换比率和软顶，在第一阶段打入11000个eth，即结束软顶
     ok.
 
@@ -109,5 +111,35 @@ deploy_contract(AccountList) ->
     {ok, {TransactionReceipt}} = erthereum:eth_getTransactionReceipt(TransactionHash),
     ct:log("contract info: ~p~n", [TransactionReceipt]),
     {_, ContractAddr} = lists:keyfind(<<"contractAddress">>, 1, TransactionReceipt),
+    abi_codegen:parse_abi_file("refilled_bgx_sol_BGCToken.abi"),
+    % 先检查各地址预留的BGX数量正确
+    % 主账户余25亿
+    {ok, MainAccountAddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, MainAccountAddr),
+    MainAccountAddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(25 * ?YI)),
+    % 基金账户各1亿
+    [begin
+         {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
+     end || Addr <- FoundationAddrList],
+    % 团队账户各1亿
+    [begin
+         {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
+     end || Addr <- TeamAddrList],
+    % 挖矿账户各15亿
+    [begin
+         {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(15 * ?YI))
+     end || Addr <- MiningAddrList],
+    % 基石账户各1亿
+    [begin
+         {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
+     end || Addr <- CornerstoneAddrList],
+    % PreICO账户各1亿
+    [begin
+         {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
+     end || Addr <- PreIcoAddrList],
     {ok, ContractAddr}.
 
