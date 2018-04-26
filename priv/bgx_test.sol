@@ -4,8 +4,8 @@ interface tokenRecipient { function receiveApproval(address _from, uint256 _valu
 
 contract BGCToken {
     // 以下参数测试时会临时修改，在正式发布时需要修正为正式参数 ======>
-    string public name = "BitGameCoinTesting";
-    string public symbol = "BGCT";
+    string public name = "BitGameCoinTesting1";
+    string public symbol = "BGCT1";
 
     address ethFundAddress = 0x7C235ac7b006d829990384018B0E98fDf0bA5EF7; //以太坊轉存地址
     address icoAddress = 0xC817a2afe8F6ba1a697dAaA1df834e18Be9403e7; // ICO地址
@@ -20,18 +20,18 @@ contract BGCToken {
     address[] miningAddresses = [0x710967a31D79BCFBF053292aB21Bbc559e288407,
                                  0x7bF52Ef4b6e8bEeB24c4Dea4c8e94177739561a0]; // 挖矿地址，2个
     address[] angelAddresses = [0x122399734D64d6c4aa46b85959A3304CA812161f]; // 天使地址，1个
-    address[] cornerstoneAddresses = [0x9d35F83982A479F611fa893452f6876972Ec6348,
-                                      0x1EAf530897EB1D93fF4373889d9cfd5a1E405D1B,
-                                      0x377221D5b7776C1Ba4B8e8d11a32CF9a7469A095,
-                                      0xc4381bc9dDFaa8A9954CF2615F80F8Fc145E024F,
-                                      0x699a3be17F729F3eB965fBb7d71Db185016B1215,
-                                      0x9F793B134E41Bb404142B598E05Ea6ed5477D392,
-                                      0xA7FF388DAfD240505f9a1d3ca37c15E058B9D4ea]; // 基石地址，7个
+    address[] cornerstoneAddresses = [0xd7D29d9E65bb55F7ECb32Fe37db85B60F2084ed0,
+                                      0x15C210265A8CbF3b67dcD8649fb243A8CAa48d10,
+                                      0xBf1D4C2268731EE50870d205ac5C6b3C869Fb71D,
+                                      0xb8991c67F49B00f64EaF72391B0C8B19Eb43B5dC,
+                                      0x13757983b699465F9F76e1C365ec7666Fd770092,
+                                      0x0A492c370a6311252B1Ed654778272DF558E2b9F,
+                                      0x2A86c02f145425747DD9BCB6c01cdB218d7E4Dba]; // 基石地址，7个
     address[] preIcoAddresses = [0x4d1Ffd49d47552adcaf1729b9C4A2320419b81E1]; // PreICO地址，1个
 
-    uint256 startTime = 1530018000; // 开始时间戳，2018/5/8 0:0:0 UTC-0
-    uint256 endTime = 1530021600; // 结束时间戳，2018/6/9 0:0:0 UTC-0
-    uint256 lockEndTime = 1530021600; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
+    uint256 startTime = 1524754800; // 开始时间戳，2018/5/8 0:0:0 UTC-0
+    uint256 endTime = 1524762000; // 结束时间戳，2018/6/9 0:0:0 UTC-0
+    uint256 lockEndTime = 1524762000; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
     // <====== 正式发布需要修正的参数
 
     uint256 public decimals = 18;
