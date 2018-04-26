@@ -4,47 +4,34 @@ interface tokenRecipient { function receiveApproval(address _from, uint256 _valu
 
 contract BGCToken {
     // 以下参数测试时会临时修改，在正式发布时需要修正为正式参数 ======>
-    string public name = "BitGameCoin1";
-    string public symbol = "BGC1";
+    string public name = "BitGameCoin";
+    string public symbol = "BGC";
 
-    address ethFundAddress = $ETH_FUND_ADDR; // 以太坊轉存地址
-    address icoAddress = $ICO_ADDR; // ICO地址
-    address[] foundationAddresses = [$FOUNDATION_ADDRS]; // 基金会地址，7个
-    address[] teamAddresses = [$TEAM_ADDRS]; // 团队地址，1个
-    address[] miningAddresses = [$MINING_ADDRS]; // 挖矿地址，2个
-    address[] angelAddresses = [$ANGEL_ADDRS]; // 天使地址，1个
-    address[] cornerstoneAddresses = [$CORNERSTONE_ADDRS]; // 基石地址，7个
-    address[] preIcoAddresses = [$PREICO_ADDRS]; // PreICO地址，1个
+    address ethFundAddress = 0x7C235ac7b006d829990384018B0E98fDf0bA5EF7; //以太坊轉存地址
+    address icoAddress = 0xC817a2afe8F6ba1a697dAaA1df834e18Be9403e7; // ICO地址
+    address[] foundationAddresses = [0xBc9d9A1EE11dC2803BA2daaAa892483052Ed97f5,
+                                     0x3CA55e25C110b175B6622586aC31a6682a916670,
+                                     0xF13b2d7c5d6d6E93f79D41FA72cFD33A75c0607d,
+                                     0xc321Cf1D0ab11743cB5dDB4d77F6Ede8a08D3281,
+                                     0xf7179c8A47F511E4fcAcA9b6187ED4052cBBB7BB,
+                                     0x516c06F2A390E62c2F6cB3C2E38c5c6dF5A17141,
+                                     0xE71a86f7FFa3E3aA92e5cA6b6df8B56d8600c7D9]; // 基金会地址，7个
+    address[] teamAddresses = [0x3CFdEC9041b04a7eEb07a732B964a5B33f9Ebe1F]; // 团队地址，1个
+    address[] miningAddresses = [0x710967a31D79BCFBF053292aB21Bbc559e288407,
+                                 0x7bF52Ef4b6e8bEeB24c4Dea4c8e94177739561a0]; // 挖矿地址，2个
+    address[] angelAddresses = [0x122399734D64d6c4aa46b85959A3304CA812161f]; // 天使地址，1个
+    address[] cornerstoneAddresses = [0x9d35F83982A479F611fa893452f6876972Ec6348,
+                                      0x5CcB5458f48c2f70a458004d2e589Bc8bAeC6aA0,
+                                      0x377221D5b7776C1Ba4B8e8d11a32CF9a7469A095,
+                                      0xc4381bc9dDFaa8A9954CF2615F80F8Fc145E024F,
+                                      0x699a3be17F729F3eB965fBb7d71Db185016B1215,
+                                      0x9F793B134E41Bb404142B598E05Ea6ed5477D392,
+                                      0xA7FF388DAfD240505f9a1d3ca37c15E058B9D4ea]; // 基石地址，7个
+    address[] preIcoAddresses = [0x4d1Ffd49d47552adcaf1729b9C4A2320419b81E1]; // PreICO地址，1个
 
-    //address ethFundAddress = 0x7C235ac7b006d829990384018B0E98fDf0bA5EF7; // 以太坊轉存地址
-    //address icoAddress = 0xC817a2afe8F6ba1a697dAaA1df834e18Be9403e7; // ICO地址
-    //address[] foundationAddresses = [0xBc9d9A1EE11dC2803BA2daaAa892483052Ed97f5,
-    //                                 0x3CA55e25C110b175B6622586aC31a6682a916670,
-    //                                 0xF13b2d7c5d6d6E93f79D41FA72cFD33A75c0607d,
-    //                                 0xc321Cf1D0ab11743cB5dDB4d77F6Ede8a08D3281,
-    //                                 0xf7179c8A47F511E4fcAcA9b6187ED4052cBBB7BB,
-    //                                 0x516c06F2A390E62c2F6cB3C2E38c5c6dF5A17141,
-    //                                 0xE71a86f7FFa3E3aA92e5cA6b6df8B56d8600c7D9]; // 基金会地址，7个
-    //address[] teamAddresses = [0x3CFdEC9041b04a7eEb07a732B964a5B33f9Ebe1F]; // 团队地址，1个
-    //address[] miningAddresses = [0x710967a31D79BCFBF053292aB21Bbc559e288407,
-    //                             0x7bF52Ef4b6e8bEeB24c4Dea4c8e94177739561a0]; // 挖矿地址，2个
-    //address[] angelAddresses = [0x122399734D64d6c4aa46b85959A3304CA812161f]; // 天使地址，1个
-    //address[] cornerstoneAddresses = [0x9d35F83982A479F611fa893452f6876972Ec6348,
-    //                                  0x5CcB5458f48c2f70a458004d2e589Bc8bAeC6aA0,
-    //                                  0x377221D5b7776C1Ba4B8e8d11a32CF9a7469A095,
-    //                                  0xc4381bc9dDFaa8A9954CF2615F80F8Fc145E024F,
-    //                                  0x699a3be17F729F3eB965fBb7d71Db185016B1215,
-    //                                  0x9F793B134E41Bb404142B598E05Ea6ed5477D392,
-    //                                  0xA7FF388DAfD240505f9a1d3ca37c15E058B9D4ea]; // 基石地址，7个
-    //address[] preIcoAddresses = [0x4d1Ffd49d47552adcaf1729b9C4A2320419b81E1]; // PreICO地址，1个
-
-    uint256 startTime = $START_TIME; // 开始时间戳，UTC-0
-    uint256 endTime = $END_TIME; // 结束时间戳，UTC-0
-    uint256 lockEndTime = $LOCK_END_TIME; // 锁定结束时间戳，UTC-0
-
-    //uint256 startTime = 1525708800; // 开始时间戳，2018/5/8 0:0:0 UTC-0
-    //uint256 endTime = 1528473600; // 结束时间戳，2018/6/9 0:0:0 UTC-0
-    //uint256 lockEndTime = 1528473600; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
+    uint256 startTime = 1530018000; // 开始时间戳，2018/5/8 0:0:0 UTC-0
+    uint256 endTime = 1530021600; // 结束时间戳，2018/6/9 0:0:0 UTC-0
+    uint256 lockEndTime = 1530021600; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
     // <====== 正式发布需要修正的参数
 
     uint256 public decimals = 18;
@@ -78,7 +65,7 @@ contract BGCToken {
 
     uint256 public totalSupply = 100 * (10**8) * DECIMALSFACTOR; // 总量100亿
     uint256 public availableSupply = totalSupply; // 剩余的代币数量
-    uint256 hardCap = 30000 * weiFACTOR; // 硬顶3万ETH
+    uint256 hardCap = 2 * weiFACTOR; // 硬顶3万ETH
     uint256 minimumDonation = 1 * 10 ** (weiDECIMALS - 1); // 最低参与0.1ETH才能参与
 
     bool public finalised = false;

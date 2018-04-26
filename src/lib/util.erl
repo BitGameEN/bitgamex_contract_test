@@ -11,6 +11,7 @@
         unixtime/0,
         longunixtime/0,
         rand/2,
+        round2d/1,
         ceil/1,
         floor/1,
         implode/2,
@@ -57,13 +58,18 @@ rand(Min, Max) ->
     %% 如果没有种子，将从核心服务器中去获取一个种子，以保证不同进程都可取得不同的种子
     case get(random_seed) of
         undefined ->
-            RandSeed = mod_rand:get_seed(),
+            <<A:32, B:32, C:32>> = crypto:strong_rand_bytes(12),
+            RandSeed = {A, B, C},
             rand:seed(exsplus, RandSeed),
             put(random_seed, RandSeed);
         _ -> skip
     end,
     M = Min - 1,
     rand:uniform(Max - M) + M.
+
+%%四舍五入保留两位小数
+round2d(N) ->
+    round(N*100)/100.
 
 %%向上取整
 ceil(N) ->

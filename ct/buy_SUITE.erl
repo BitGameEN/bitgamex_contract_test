@@ -4,6 +4,8 @@
 
 % 1亿Token，以最小单位表示（18位小数精度）
 -define(YI, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10).
+% 1ETH
+-define(WEI_PER_ETH, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10).
 
 all() ->
     [{group, buy}].
@@ -16,7 +18,7 @@ init_per_suite(Config) ->
     bt:test_start(),
     Config.
 
-end_per_suite(Config) ->
+end_per_suite(_Config) ->
     % 停止test
     bt:test_stop(),
     ok.
@@ -34,7 +36,6 @@ init_per_group(buy, Config) ->
     ct:log("creating 100 accounts...", []),
     L = [begin
              {ok, Addr} = erthereum:personal_newAccount(<<"test">>),
-             {ok, _Addr} = erthereum:personal_unlockAccount(Addr, <<"test">>),
              ct:log("account ~p created: ~p~n", [I, Addr]),
              {I, Addr}
          end || I <- lists:seq(1, 100)],
@@ -52,29 +53,58 @@ end_per_group(_Name, _Config) ->
     ok.
 
 test_case_normal(Config) ->
-    {ok, MainAccountAddr} = erthereum:eth_coinbase(),
     {_, ContractAddr} = lists:keyfind(contract_addr, 1, Config),
-    % 按合约里兑换比率和软顶，在第一阶段打入11000个eth，即结束软顶
+    % 后80个账号可给合约地址打入ETH
+    {_, L} = lists:keyfind(accounts, 1, Config),
+    [{_, EthFundAddr}|_] = L,
+    [{_, HeadAddr}|_] = AccountList = lists:sublist(L, 21, 80),
+    % 打入0.09是不成功的（最少0.1）
+    {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
+    {ok, _} = erthereum:personal_unlockAccount(HeadAddr, <<"test">>),
+    {ok, _} = erthereum:eth_sendTransaction(HeadAddr, ContractAddr, {ether, 0.09}),
+    timer:sleep(5000),
+    {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
+    % 众账号随机打入30000个ETH，达到硬顶（分3轮，每轮10000ETH）
+    BuyF = fun() ->
+               RandL = [util:rand(1, 1000) || _I <- lists:seq(1, 80)],
+               RandS = lists:sum(RandL),
+               [H|T] = BuyL0 = [0.1 + util:round2d((Rand / RandS) * (10000 - 0.1 * 80))  || Rand <- RandL],
+               BuyS = lists:sum(BuyL0),
+               Remainder = 10000 - BuyS,
+               BuyL = [H+Remainder|T],
+               [begin
+                    {ok, _} = erthereum:personal_unlockAccount(Addr, <<"test">>),
+                    {ok, TransactionHash} = erthereum:eth_sendTransaction(Addr, ContractAddr, {ether, Amount}),
+                    timer:sleep(5000),
+                    {ok, {TransactionReceipt}} = erthereum:eth_getTransactionReceipt(TransactionHash),
+                    ct:log("transaction info: ~p~n", [TransactionReceipt])
+                end || {{_, Addr}, Amount} <- lists:zip(AccountList, BuyL)]
+           end,
+    BuyF(),
+    timer:sleep(60000),
+    {ok, {wei,10000 * ?WEI_PER_ETH}} = erthereum:eth_getBalance(EthFundAddr),
+    % 
     ok.
 
-distribute_ETH(AccountList) ->
-    % 每个账号划拨50000ETH
+distribute_ETH(AccountList0) ->
+    % 后99个账号，每个账号划拨50000ETH
+    [_|AccountList] = AccountList0,
     {ok, MainAccountAddr} = erthereum:eth_coinbase(),
     [begin
          {ok, _} = erthereum:eth_sendTransaction(MainAccountAddr, Addr, {ether, 50000}),
          timer:sleep(1000)
-     end || {_, Addr} <- AccountList],
+     end || {_I, Addr} <- AccountList],
     ok.
 
 deploy_contract(AccountList) ->
     {ok, C0} = file:read_file("../../priv/bgx.sol"),
     ct:log("raw contract: ~ts~n", [C0]),
     % $START_TIME
-    StartTime = util:unixtime() + 120, % 2分钟后
+    StartTime = util:unixtime(), % 立即开始
     StartTimeBin = integer_to_binary(StartTime),
     C1 = binary:replace(C0, <<"$START_TIME">>, StartTimeBin),
     % $END_TIME
-    EndTime = StartTime + 600, % 10分钟后
+    EndTime = StartTime + 30 * 60, % 30分钟后
     EndTimeBin = integer_to_binary(EndTime),
     C2 = binary:replace(C1, <<"$END_TIME">>, EndTimeBin),
     % $LOCK_END_TIME
@@ -84,30 +114,33 @@ deploy_contract(AccountList) ->
     % $ETH_FUND_ADDR
     [{_, EthFundAddr} | _] = AccountList,
     C4 = binary:replace(C3, <<"$ETH_FUND_ADDR">>, EthFundAddr),
+    % $ICO_ADDR
+    [_, {_, IcoAddr} | _] = AccountList,
+    C5 = binary:replace(C4, <<"$ICO_ADDR">>, IcoAddr),
     % $FOUNDATION_ADDRS，7个
-    FoundationAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 2, 7)],
+    FoundationAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 3, 7)],
     FoundationAddrs = list_to_binary(util:implode(", ", FoundationAddrList)),
-    C5 = binary:replace(C4, <<"$FOUNDATION_ADDRS">>, FoundationAddrs),
+    C6 = binary:replace(C5, <<"$FOUNDATION_ADDRS">>, FoundationAddrs),
     % $TEAM_ADDRS，1个
-    TeamAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 9, 1)],
+    TeamAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 10, 1)],
     TeamAddrs = list_to_binary(util:implode(", ", TeamAddrList)),
-    C6 = binary:replace(C5, <<"$TEAM_ADDRS">>, TeamAddrs),
+    C7 = binary:replace(C6, <<"$TEAM_ADDRS">>, TeamAddrs),
     % $MINING_ADDRS，2个
-    MiningAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 10, 2)],
+    MiningAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 11, 2)],
     MiningAddrs = list_to_binary(util:implode(", ", MiningAddrList)),
-    C7 = binary:replace(C6, <<"$MINING_ADDRS">>, MiningAddrs),
+    C8 = binary:replace(C7, <<"$MINING_ADDRS">>, MiningAddrs),
     % $ANGEL_ADDRS，1个
-    AngelAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 12, 1)],
+    AngelAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 13, 1)],
     AngelAddrs = list_to_binary(util:implode(", ", AngelAddrList)),
-    C8 = binary:replace(C7, <<"$ANGEL_ADDRS">>, AngelAddrs),
+    C9 = binary:replace(C8, <<"$ANGEL_ADDRS">>, AngelAddrs),
     % $CORNERSTONE_ADDRS，7个
-    CornerstoneAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 13, 7)],
+    CornerstoneAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 14, 7)],
     CornerstoneAddrs = list_to_binary(util:implode(", ", CornerstoneAddrList)),
-    C9 = binary:replace(C8, <<"$CORNERSTONE_ADDRS">>, CornerstoneAddrs),
+    C10 = binary:replace(C9, <<"$CORNERSTONE_ADDRS">>, CornerstoneAddrs),
     % $PREICO_ADDRS，1个
-    PreIcoAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 20, 1)],
+    PreIcoAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 21, 1)],
     PreIcoAddrs = list_to_binary(util:implode(", ", PreIcoAddrList)),
-    C = binary:replace(C9, <<"$PREICO_ADDRS">>, PreIcoAddrs),
+    C = binary:replace(C10, <<"$PREICO_ADDRS">>, PreIcoAddrs),
     ct:log("refilled contract: ~ts~n", [C]),
     % 编译合约
     %eth_compileSolidity are gone in go-ethereum 1.6.0
@@ -126,9 +159,9 @@ deploy_contract(AccountList) ->
     {_, ContractAddr} = lists:keyfind(<<"contractAddress">>, 1, TransactionReceipt),
     abi_codegen:parse_abi_file("refilled_bgx_sol_BGCToken.abi"),
     % 先检查各地址预留的BGX数量正确
-    % 主账户余20亿
-    {ok, MainAccountAddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, MainAccountAddr),
-    MainAccountAddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(20 * ?YI)),
+    % ICO账户
+    {ok, IcoAddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, IcoAddr),
+    IcoAddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(20 * ?YI)),
     % 基金账户
     [begin
          {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
