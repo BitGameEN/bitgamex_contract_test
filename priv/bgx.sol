@@ -30,7 +30,7 @@ contract BGCToken {
     //                             0x7bF52Ef4b6e8bEeB24c4Dea4c8e94177739561a0]; // 挖矿地址，2个
     //address[] angelAddresses = [0x122399734D64d6c4aa46b85959A3304CA812161f]; // 天使地址，1个
     //address[] cornerstoneAddresses = [0x9d35F83982A479F611fa893452f6876972Ec6348,
-    //                                  0x5CcB5458f48c2f70a458004d2e589Bc8bAeC6aA0,
+    //                                  0x1EAf530897EB1D93fF4373889d9cfd5a1E405D1B,
     //                                  0x377221D5b7776C1Ba4B8e8d11a32CF9a7469A095,
     //                                  0xc4381bc9dDFaa8A9954CF2615F80F8Fc145E024F,
     //                                  0x699a3be17F729F3eB965fBb7d71Db185016B1215,
