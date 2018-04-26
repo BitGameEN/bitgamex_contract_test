@@ -73,29 +73,41 @@ deploy_contract(AccountList) ->
     StartTime = util:unixtime() + 120, % 2分钟后
     StartTimeBin = integer_to_binary(StartTime),
     C1 = binary:replace(C0, <<"$START_TIME">>, StartTimeBin),
+    % $END_TIME
+    EndTime = StartTime + 600, % 10分钟后
+    EndTimeBin = integer_to_binary(EndTime),
+    C2 = binary:replace(C1, <<"$END_TIME">>, EndTimeBin),
+    % $LOCK_END_TIME
+    LockEndTime = EndTime,
+    LockEndTimeBin = integer_to_binary(LockEndTime),
+    C3 = binary:replace(C2, <<"$LOCK_END_TIME">>, LockEndTimeBin),
     % $ETH_FUND_ADDR
     [{_, EthFundAddr} | _] = AccountList,
-    C2 = binary:replace(C1, <<"$ETH_FUND_ADDR">>, EthFundAddr),
-    % $FOUNDATION_ADDRS，15个
-    FoundationAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 2, 15)],
+    C4 = binary:replace(C3, <<"$ETH_FUND_ADDR">>, EthFundAddr),
+    % $FOUNDATION_ADDRS，7个
+    FoundationAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 2, 7)],
     FoundationAddrs = list_to_binary(util:implode(", ", FoundationAddrList)),
-    C3 = binary:replace(C2, <<"$FOUNDATION_ADDRS">>, FoundationAddrs),
-    % $TEAM_ADDRS，15个
-    TeamAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 17, 15)],
+    C5 = binary:replace(C4, <<"$FOUNDATION_ADDRS">>, FoundationAddrs),
+    % $TEAM_ADDRS，1个
+    TeamAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 9, 1)],
     TeamAddrs = list_to_binary(util:implode(", ", TeamAddrList)),
-    C4 = binary:replace(C3, <<"$TEAM_ADDRS">>, TeamAddrs),
+    C6 = binary:replace(C5, <<"$TEAM_ADDRS">>, TeamAddrs),
     % $MINING_ADDRS，2个
-    MiningAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 32, 2)],
+    MiningAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 10, 2)],
     MiningAddrs = list_to_binary(util:implode(", ", MiningAddrList)),
-    C5 = binary:replace(C4, <<"$MINING_ADDRS">>, MiningAddrs),
-    % $CORNERSTONE_ADDRS，10个
-    CornerstoneAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 34, 10)],
+    C7 = binary:replace(C6, <<"$MINING_ADDRS">>, MiningAddrs),
+    % $ANGEL_ADDRS，1个
+    AngelAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 12, 1)],
+    AngelAddrs = list_to_binary(util:implode(", ", AngelAddrList)),
+    C8 = binary:replace(C7, <<"$ANGEL_ADDRS">>, AngelAddrs),
+    % $CORNERSTONE_ADDRS，7个
+    CornerstoneAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 13, 7)],
     CornerstoneAddrs = list_to_binary(util:implode(", ", CornerstoneAddrList)),
-    C6 = binary:replace(C5, <<"$CORNERSTONE_ADDRS">>, CornerstoneAddrs),
-    % $PREICO_ADDRS，5个
-    PreIcoAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 44, 5)],
+    C9 = binary:replace(C8, <<"$CORNERSTONE_ADDRS">>, CornerstoneAddrs),
+    % $PREICO_ADDRS，1个
+    PreIcoAddrList = [Addr || {_, Addr} <- lists:sublist(AccountList, 20, 1)],
     PreIcoAddrs = list_to_binary(util:implode(", ", PreIcoAddrList)),
-    C = binary:replace(C6, <<"$PREICO_ADDRS">>, PreIcoAddrs),
+    C = binary:replace(C9, <<"$PREICO_ADDRS">>, PreIcoAddrs),
     ct:log("refilled contract: ~ts~n", [C]),
     % 编译合约
     %eth_compileSolidity are gone in go-ethereum 1.6.0
@@ -114,33 +126,38 @@ deploy_contract(AccountList) ->
     {_, ContractAddr} = lists:keyfind(<<"contractAddress">>, 1, TransactionReceipt),
     abi_codegen:parse_abi_file("refilled_bgx_sol_BGCToken.abi"),
     % 先检查各地址预留的BGX数量正确
-    % 主账户余25亿
+    % 主账户余20亿
     {ok, MainAccountAddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, MainAccountAddr),
-    MainAccountAddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(25 * ?YI)),
-    % 基金账户各1亿
+    MainAccountAddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(20 * ?YI)),
+    % 基金账户
     [begin
          {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
-         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
-     end || Addr <- FoundationAddrList],
-    % 团队账户各1亿
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(YiAmount * ?YI))
+     end || {Addr, YiAmount} <- lists:zip(FoundationAddrList, [5, 5, 1, 1, 1, 1, 1])],
+    % 团队账户
     [begin
          {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
-         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
-     end || Addr <- TeamAddrList],
-    % 挖矿账户各15亿
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(YiAmount * ?YI))
+     end || {Addr, YiAmount} <- lists:zip(TeamAddrList, [15])],
+    % 挖矿账户
     [begin
          {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
-         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(15 * ?YI))
-     end || Addr <- MiningAddrList],
-    % 基石账户各1亿
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(YiAmount * ?YI))
+     end || {Addr, YiAmount} <- lists:zip(MiningAddrList, [15, 15])],
+    % 天使账户
     [begin
          {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
-         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
-     end || Addr <- CornerstoneAddrList],
-    % PreICO账户各1亿
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(YiAmount * ?YI))
+     end || {Addr, YiAmount} <- lists:zip(AngelAddrList, [5])],
+    % 基石账户
     [begin
          {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
-         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1 * ?YI))
-     end || Addr <- PreIcoAddrList],
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(YiAmount * ?YI))
+     end || {Addr, YiAmount} <- lists:zip(CornerstoneAddrList, [1, 1, 1, 1, 1, 2, 3])],
+    % PreICO账户
+    [begin
+         {ok, AddrBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, Addr),
+         AddrBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(YiAmount * ?YI))
+     end || {Addr, YiAmount} <- lists:zip(PreIcoAddrList, [5])],
     {ok, ContractAddr}.
 
