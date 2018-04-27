@@ -4,10 +4,10 @@ interface tokenRecipient { function receiveApproval(address _from, uint256 _valu
 
 contract BGCToken {
     // 以下参数测试时会临时修改，在正式发布时需要修正为正式参数 ======>
-    string public name = "BitGameCoinTesting1";
-    string public symbol = "BGCT1";
+    string public name = "BitGameCoinTesting";
+    string public symbol = "BGCT";
 
-    address ethFundAddress = 0x7C235ac7b006d829990384018B0E98fDf0bA5EF7; //以太坊轉存地址
+    address ethFundAddress = 0xA061A7c0688da673AB9c6Dcf7601b81AE219AEda; //以太坊轉存地址
     address icoAddress = 0xC817a2afe8F6ba1a697dAaA1df834e18Be9403e7; // ICO地址
     address[] foundationAddresses = [0xBc9d9A1EE11dC2803BA2daaAa892483052Ed97f5,
                                      0x3CA55e25C110b175B6622586aC31a6682a916670,
@@ -29,9 +29,9 @@ contract BGCToken {
                                       0x2A86c02f145425747DD9BCB6c01cdB218d7E4Dba]; // 基石地址，7个
     address[] preIcoAddresses = [0x4d1Ffd49d47552adcaf1729b9C4A2320419b81E1]; // PreICO地址，1个
 
-    uint256 startTime = 1524754800; // 开始时间戳，2018/5/8 0:0:0 UTC-0
-    uint256 endTime = 1524762000; // 结束时间戳，2018/6/9 0:0:0 UTC-0
-    uint256 lockEndTime = 1524762000; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
+    uint256 startTime = 1524805200; // 开始时间戳，2018/5/8 0:0:0 UTC-0
+    uint256 endTime = 1524812400; // 结束时间戳，2018/6/9 0:0:0 UTC-0
+    uint256 lockEndTime = 1524812400; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
     // <====== 正式发布需要修正的参数
 
     uint256 public decimals = 18;
