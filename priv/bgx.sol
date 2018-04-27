@@ -101,30 +101,37 @@ contract BGCToken {
         for (i = 0; i < foundationAddresses.length; i++){
             balanceOf[foundationAddresses[i]] += foundationAmounts[i];
             availableSupply -= foundationAmounts[i];
+            emit Transfer(address(0), foundationAddresses[i], foundationAmounts[i]);
         }
         for (i = 0; i < teamAddresses.length; i++){
             balanceOf[teamAddresses[i]] += teamAmounts[i];
             availableSupply -= teamAmounts[i];
+            emit Transfer(address(0), teamAddresses[i], teamAmounts[i]);
         }
         for (i = 0; i < miningAddresses.length; i++){
             balanceOf[miningAddresses[i]] += miningAmounts[i];
             availableSupply -= miningAmounts[i];
+            emit Transfer(address(0), miningAddresses[i], miningAmounts[i]);
         }
         for (i = 0; i < angelAddresses.length; i++){
             balanceOf[angelAddresses[i]] += angelAmounts[i];
             availableSupply -= angelAmounts[i];
+            emit Transfer(address(0), angelAddresses[i], angelAmounts[i]);
         }
         for (i = 0; i < cornerstoneAddresses.length; i++){
             balanceOf[cornerstoneAddresses[i]] += cornerstoneAmounts[i];
             availableSupply -= cornerstoneAmounts[i];
+            emit Transfer(address(0), cornerstoneAddresses[i], cornerstoneAmounts[i]);
         }
         for (i = 0; i < preIcoAddresses.length; i++){
             balanceOf[preIcoAddresses[i]] += preIcoAmounts[i];
             availableSupply -= preIcoAmounts[i];
+            emit Transfer(address(0), preIcoAddresses[i], preIcoAmounts[i]);
         }
 
         // 剩下的代币初始都存在ICO的地址上
         balanceOf[icoAddress] = availableSupply;
+        emit Transfer(address(0), icoAddress, availableSupply);
     }
 
     // fallback方法，如果用户未在转账data中添加数据，默认是走这个方法
@@ -180,6 +187,9 @@ contract BGCToken {
     }
 
     function _isInWhiteAddresses(address _from) internal view returns (bool success) {
+        if (icoAddress == _from){
+            return true;
+        }
         uint i = 0;
         for (i = 0; i < foundationAddresses.length; i++){
             if (foundationAddresses[i] == _from){
