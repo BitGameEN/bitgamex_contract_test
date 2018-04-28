@@ -276,4 +276,9 @@ contract BGCToken {
 
         finalised = true;
     }
+
+    function setLockEndTime(uint256 t) public {
+        require(msg.sender == contractOwner);
+        lockEndTime = t;
+    }
 }
