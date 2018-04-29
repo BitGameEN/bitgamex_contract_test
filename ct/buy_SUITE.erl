@@ -32,17 +32,17 @@ init_per_group(buy, Config) ->
     spawn(fun() -> os:cmd("mkdir eth; geth --verbosity 5 --datadir ./eth/ --rpc --rpcapi eth,net,web3,personal --rpcport 8545 --dev --mine --minerthreads 1 --ipcpath /Users/guli1/Library/Ethereum/geth.ipc 2>>./eth/eth.log") end),
     ct:log("waiting 5 seconds...", []),
     timer:sleep(5000),
-    % 创建100个账号
-    ct:log("creating 100 accounts...", []),
+    % 创建50个账号
+    ct:log("creating 50 accounts...", []),
     L = [begin
              {ok, Addr} = erthereum:personal_newAccount(<<"test">>),
              ct:log("account ~p created: ~p~n", [I, Addr]),
              {I, Addr}
-         end || I <- lists:seq(1, 100)],
+         end || I <- lists:seq(1, 50)],
     % 发布智能合约（用掉近500万gas）
     ct:log("deploying contract...", []),
     {ok, ContractAddr} = deploy_contract(L),
-    % 主账号向100个账号划拨ETH
+    % 主账号向50个账号划拨ETH
     distribute_ETH(L),
     [{accounts, L}, {contract_addr, ContractAddr} | Config];
 init_per_group(_Name, Config) ->
@@ -54,10 +54,10 @@ end_per_group(_Name, _Config) ->
 
 test_case_normal(Config) ->
     {_, ContractAddr} = lists:keyfind(contract_addr, 1, Config),
-    % 后80个账号可给合约地址打入ETH
+    % 后29个账号可给合约地址打入ETH
     {_, L} = lists:keyfind(accounts, 1, Config),
     [{_, EthFundAddr}|_] = L,
-    [{_, HeadAddr}|_] = AccountList = lists:sublist(L, 21, 80),
+    [{_, HeadAddr}|_] = AccountList = lists:sublist(L, 22, 29),
     % 打入0.09是不成功的（最少0.1）
     {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
     {ok, _} = erthereum:personal_unlockAccount(HeadAddr, <<"test">>),
@@ -66,9 +66,9 @@ test_case_normal(Config) ->
     {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
     % 众账号随机打入30000个ETH，达到硬顶（分3轮，每轮10000ETH）
     BuyF = fun() ->
-               RandL = [util:rand(1, 1000) || _I <- lists:seq(1, 80)],
+               RandL = [util:rand(1, 1000) || _I <- lists:seq(1, 29)],
                RandS = lists:sum(RandL),
-               [H|T] = BuyL0 = [0.1 + util:round2d((Rand / RandS) * (10000 - 0.1 * 80))  || Rand <- RandL],
+               [H|T] = BuyL0 = [0.1 + util:round2d((Rand / RandS) * (10000 - 0.1 * 29))  || Rand <- RandL],
                BuyS = lists:sum(BuyL0),
                Remainder = 10000 - BuyS,
                BuyL = [H+Remainder|T],
@@ -87,7 +87,7 @@ test_case_normal(Config) ->
     ok.
 
 distribute_ETH(AccountList0) ->
-    % 后99个账号，每个账号划拨50000ETH
+    % 后49个账号，每个账号划拨50000ETH（第1个地址ICO接收ETH，避免干扰，不给它划拨ETH）
     [_|AccountList] = AccountList0,
     {ok, MainAccountAddr} = erthereum:eth_coinbase(),
     [begin
@@ -104,7 +104,7 @@ deploy_contract(AccountList) ->
     StartTimeBin = integer_to_binary(StartTime),
     C1 = binary:replace(C0, <<"$START_TIME">>, StartTimeBin),
     % $END_TIME
-    EndTime = StartTime + 30 * 60, % 30分钟后
+    EndTime = StartTime + 3 * 3600, % 3小时后
     EndTimeBin = integer_to_binary(EndTime),
     C2 = binary:replace(C1, <<"$END_TIME">>, EndTimeBin),
     % $LOCK_END_TIME
