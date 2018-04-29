@@ -107,13 +107,15 @@ eth_compileSolidity(SourceCode) ->
 -spec eth_deployContract(FromAddress :: address(),
                          Data :: data()) -> {ok, TransactionHash :: data()} | {error, error()}.
 eth_deployContract(FromAddress, Data) ->
-    Params = [{[
-                   {<<"from">>, FromAddress},
-                   {<<"data">>, Data},
-                   {<<"value">>, <<"0x0">>},
-                   {<<"gas">>, <<"0x5b8d80">>} % 要>53000，同时要小于当前块的gasLimit，并且保证足够多，否则耗尽gas导致合约不能创建成功
-               ]}],
-    maybe_binary(request(eth_sendTransaction, Params)).
+    Params = [
+                 {<<"from">>, FromAddress},
+                 {<<"data">>, Data},
+                 {<<"value">>, <<"0x0">>}
+             ],
+    {ok, Gas} = request(eth_estimateGas, [{Params}]),
+    ?DBG("gas:~p~n", [Gas]),
+    % 部署合约GAS：要>53000，同时要小于当前区块的gasLimit，并且保证足够多，否则耗尽gas导致合约不能创建成功，也不能太多，给其他调用留有空间
+    maybe_binary(request(eth_sendTransaction, [{[{<<"gas">>, Gas} | Params]}])).
 
 -spec eth_callContract(FromAddress :: address(),
                        ContractAddress :: address(),
@@ -121,17 +123,18 @@ eth_deployContract(FromAddress, Data) ->
                        IsLocal ::boolean()) -> {ok, TransactionHash :: data()} | {error, error()}.
 eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
     ?DBG("FromAddress:~s~nContractAddress:~s~nData:~s~nIsLocal:~p~n", [FromAddress, ContractAddress, Data, IsLocal]),
-    Params = [{[
-                   {<<"from">>, FromAddress},
-                   {<<"to">>, ContractAddress},
-                   {<<"data">>, Data},
-                   {<<"gas">>, <<"0x5b8d80">>}
-               ]}],
+    Params = [
+                 {<<"from">>, FromAddress},
+                 {<<"to">>, ContractAddress},
+                 {<<"data">>, Data}
+             ],
     case IsLocal of
         true ->
-            maybe_binary(request(eth_call, Params ++ [<<"latest">>]));
+            maybe_binary(request(eth_call, [{Params}] ++ [<<"latest">>]));
         false ->
-            maybe_binary(request(eth_sendTransaction, Params))
+            {ok, Gas} = request(eth_estimateGas, [{Params}]),
+            ?DBG("gas:~p~n", [Gas]),
+            maybe_binary(request(eth_sendTransaction, [{[{<<"gas">>, Gas} | Params]}]))
     end.
 
 %% Creates new message call transaction or a contract creation, if the data field contains code
@@ -140,13 +143,15 @@ eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
                           Value :: quantity() | wei() | ether()) -> {ok, TransactionHash :: data()} | {error, error()}.
 eth_sendTransaction(FromAddress, ToAddress, Value0) ->
     Value = to_wei(Value0),
-    Params = [{[
-                   {<<"from">>, FromAddress},
-                   {<<"to">>, ToAddress},
-                   {<<"value">>, eth_int(Value)},
-                   {<<"gas">>, <<"0x5b8d80">>}
-               ]}],
-    maybe_binary(request(eth_sendTransaction, Params)).
+    Params = [
+                 {<<"from">>, FromAddress},
+                 {<<"to">>, ToAddress},
+                 {<<"value">>, eth_int(Value)}
+             ],
+    %{ok, Gas} = request(eth_estimateGas, [{Params}]),
+    Gas = <<"0x186A0">>,
+    ?DBG("gas:~p~n", [Gas]),
+    maybe_binary(request(eth_sendTransaction, [{[{<<"gas">>, Gas} | Params]}])).
 
 -spec eth_getTransactionReceipt(TransactionHash :: data()) -> {ok, TransactionReceipt :: json_object()} | {error, error()}.
 eth_getTransactionReceipt(TransactionHash) ->
@@ -264,6 +269,8 @@ management_api_data(eth_sendTransaction) ->
     {<<"eth_sendTransaction">>, 1};
 management_api_data(eth_getTransactionReceipt) ->
     {<<"eth_getTransactionReceipt">>, 1};
+management_api_data(eth_estimateGas) ->
+    {<<"eth_estimateGas">>, 1};
 management_api_data(web3_sha3) ->
     {<<"web3_sha3">>, 64}.
 
