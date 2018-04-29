@@ -2,10 +2,12 @@
 -include_lib("common_test/include/ct.hrl").
 -compile(export_all).
 
-% 1亿Token，以最小单位表示（18位小数精度）
--define(YI, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10).
 % 1ETH
 -define(WEI_PER_ETH, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10).
+% 1BGX（18位小数精度）
+-define(UNIT_PER_BGX, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10).
+% 1亿BGX，以最小单位表示
+-define(YI, 10 * 10 * 10 * 10 * 10 * 10 * 10 * 10 * ?UNIT_PER_BGX).
 
 all() ->
     [{group, buy}].
@@ -53,10 +55,12 @@ end_per_group(_Name, _Config) ->
     ok.
 
 test_case_normal(Config) ->
+    {ok, MainAccountAddr} = erthereum:eth_coinbase(),
     {_, ContractAddr} = lists:keyfind(contract_addr, 1, Config),
     % 后29个账号可给合约地址打入ETH
     {_, L} = lists:keyfind(accounts, 1, Config),
     [{_, EthFundAddr}|_] = L,
+    [_, {_, IcoAddr}|_] = L,
     [{_, HeadAddr}|_] = AccountList = lists:sublist(L, 22, 29),
     % 打入0.09是不成功的（最少0.1）
     {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
@@ -84,6 +88,31 @@ test_case_normal(Config) ->
     BuyF(),
     BuyF(),
     {ok, {wei,30000 * ?WEI_PER_ETH}} = erthereum:eth_getBalance(EthFundAddr),
+    % 白名单地址在结束前，可以转BGX给其他地址
+    OneWhiteAddr = IcoAddr,
+    OneOtherAddr = HeadAddr,
+    {ok, true} = erthereum:personal_unlockAccount(OneWhiteAddr, <<"test">>),
+    {ok, true} = erthereum:personal_unlockAccount(OneOtherAddr, <<"test">>),
+    {ok, _} = call_contract:transfer(OneWhiteAddr, ContractAddr, OneOtherAddr, integer_to_binary(1000 * ?UNIT_PER_BGX)),
+    timer:sleep(3000),
+    % 因为目前合约逻辑里只管收钱，并未将相应的BGX转进打入ETH的地址，所以这里余额应该等于1000
+    {ok, OneOtherBalance} = call_contract:balanceOf(MainAccountAddr, ContractAddr, OneOtherAddr),
+    OneOtherBalance = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1000 * ?UNIT_PER_BGX)),
+    % 非白名单地址在结束前，不可转账，直到锁定结束后
+    {ok, _} = call_contract:transfer(OneOtherAddr, ContractAddr, OneWhiteAddr, integer_to_binary(1000 * ?UNIT_PER_BGX)),
+    timer:sleep(3000),
+    % 不能转出，所以余额还是1000
+    {ok, OneOtherBalance2} = call_contract:balanceOf(MainAccountAddr, ContractAddr, OneOtherAddr),
+    OneOtherBalance2 = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(1000 * ?UNIT_PER_BGX)),
+    % 手动设置lockEndTime结束
+    Now = util:unixtime() - 30,
+    {ok, _} = call_contract:setLockEndTime(MainAccountAddr, ContractAddr, integer_to_binary(Now)),
+    timer:sleep(3000),
+    {ok, _} = call_contract:transfer(OneOtherAddr, ContractAddr, OneWhiteAddr, integer_to_binary(1000 * ?UNIT_PER_BGX)),
+    timer:sleep(3000),
+    % 能转出，所以余额是0
+    {ok, OneOtherBalance3} = call_contract:balanceOf(MainAccountAddr, ContractAddr, OneOtherAddr),
+    OneOtherBalance3 = lib_abi:encode_param_with_0x(<<"uint256">>, integer_to_binary(0)),
     ok.
 
 distribute_ETH(AccountList0) ->
