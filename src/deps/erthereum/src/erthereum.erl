@@ -112,9 +112,14 @@ eth_deployContract(FromAddress, Data) ->
                  {<<"data">>, Data},
                  {<<"value">>, <<"0x0">>}
              ],
-    {ok, Gas} = request(eth_estimateGas, [{Params}]),
+    Gas = case request(eth_estimateGas, [{Params}]) of
+              {ok, Gas_} -> Gas_;
+              Err ->
+                  ?DBG("~p~n", [Err]),
+                  <<"0x5b8d80">>
+          end,
     ?DBG("gas:~p~n", [Gas]),
-    % 部署合约GAS：要>53000，同时要小于当前区块的gasLimit，并且保证足够多，否则耗尽gas导致合约不能创建成功，也不能太多，给其他调用留有空间
+    % 部署合约GAS：要>53000，同时要小于当前区块的gasLimit，并且保证足够多，否则耗尽gas导致合约不能创建成功，也不能太多，给本区块后续调用留有空间
     maybe_binary(request(eth_sendTransaction, [{[{<<"gas">>, Gas} | Params]}])).
 
 -spec eth_callContract(FromAddress :: address(),
@@ -132,7 +137,12 @@ eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
         true ->
             maybe_binary(request(eth_call, [{Params}] ++ [<<"latest">>]));
         false ->
-            {ok, Gas} = request(eth_estimateGas, [{Params}]),
+            Gas = case request(eth_estimateGas, [{Params}]) of
+                      {ok, Gas_} -> Gas_;
+                      Err ->
+                          ?DBG("~p~n", [Err]),
+                          <<"0x186A0">>
+                  end,
             ?DBG("gas:~p~n", [Gas]),
             maybe_binary(request(eth_sendTransaction, [{[{<<"gas">>, Gas} | Params]}]))
     end.
@@ -148,8 +158,12 @@ eth_sendTransaction(FromAddress, ToAddress, Value0) ->
                  {<<"to">>, ToAddress},
                  {<<"value">>, eth_int(Value)}
              ],
-    %{ok, Gas} = request(eth_estimateGas, [{Params}]),
-    Gas = <<"0x186A0">>,
+    Gas = case request(eth_estimateGas, [{Params}]) of
+              {ok, Gas_} -> Gas_;
+              Err ->
+                  ?DBG("~p~n", [Err]),
+                  <<"0x186A0">>
+          end,
     ?DBG("gas:~p~n", [Gas]),
     maybe_binary(request(eth_sendTransaction, [{[{<<"gas">>, Gas} | Params]}])).
 
