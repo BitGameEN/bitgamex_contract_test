@@ -60,9 +60,9 @@ test_case_normal(Config) ->
     [{_, HeadAddr}|_] = AccountList = lists:sublist(L, 22, 29),
     % 打入0.09是不成功的（最少0.1）
     {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
-    {ok, _} = erthereum:personal_unlockAccount(HeadAddr, <<"test">>),
+    {ok, true} = erthereum:personal_unlockAccount(HeadAddr, <<"test">>),
     {ok, _} = erthereum:eth_sendTransaction(HeadAddr, ContractAddr, {ether, 0.09}),
-    timer:sleep(5000),
+    timer:sleep(1000),
     {ok, EthFundAddrBalanceOld} = erthereum:eth_getBalance(EthFundAddr),
     % 众账号随机打入30000个ETH，达到硬顶（分3轮，每轮10000ETH）
     BuyF = fun() ->
@@ -71,19 +71,19 @@ test_case_normal(Config) ->
                [H|T] = BuyL0 = [0.1 + util:round2d((Rand / RandS) * (10000 - 0.1 * 29))  || Rand <- RandL],
                BuyS = lists:sum(BuyL0),
                Remainder = 10000 - BuyS,
-               BuyL = [H+Remainder|T],
+               BuyL = [util:ceil(H+Remainder)|T],
                [begin
-                    {ok, _} = erthereum:personal_unlockAccount(Addr, <<"test">>),
+                    {ok, true} = erthereum:personal_unlockAccount(Addr, <<"test">>),
                     {ok, TransactionHash} = erthereum:eth_sendTransaction(Addr, ContractAddr, {ether, Amount}),
-                    timer:sleep(5000),
+                    timer:sleep(1000),
                     {ok, {TransactionReceipt}} = erthereum:eth_getTransactionReceipt(TransactionHash),
                     ct:log("transaction info: ~p~n", [TransactionReceipt])
                 end || {{_, Addr}, Amount} <- lists:zip(AccountList, BuyL)]
            end,
     BuyF(),
-    timer:sleep(60000),
-    {ok, {wei,10000 * ?WEI_PER_ETH}} = erthereum:eth_getBalance(EthFundAddr),
-    % 
+    BuyF(),
+    BuyF(),
+    {ok, {wei,30000 * ?WEI_PER_ETH}} = erthereum:eth_getBalance(EthFundAddr),
     ok.
 
 distribute_ETH(AccountList0) ->

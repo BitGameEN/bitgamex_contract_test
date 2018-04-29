@@ -111,7 +111,6 @@ eth_deployContract(FromAddress, Data) ->
                    {<<"from">>, FromAddress},
                    {<<"data">>, Data},
                    {<<"value">>, <<"0x0">>},
-                   {<<"gasPrice">>, <<"0x174876e800">>},
                    {<<"gas">>, <<"0x5b8d80">>} % 要>53000，同时要小于当前块的gasLimit，并且保证足够多，否则耗尽gas导致合约不能创建成功
                ]}],
     maybe_binary(request(eth_sendTransaction, Params)).
@@ -125,7 +124,8 @@ eth_callContract(FromAddress, ContractAddress, Data, IsLocal) ->
     Params = [{[
                    {<<"from">>, FromAddress},
                    {<<"to">>, ContractAddress},
-                   {<<"data">>, Data}
+                   {<<"data">>, Data},
+                   {<<"gas">>, <<"0x5b8d80">>}
                ]}],
     case IsLocal of
         true ->
@@ -143,7 +143,8 @@ eth_sendTransaction(FromAddress, ToAddress, Value0) ->
     Params = [{[
                    {<<"from">>, FromAddress},
                    {<<"to">>, ToAddress},
-                   {<<"value">>, eth_int(Value)}
+                   {<<"value">>, eth_int(Value)},
+                   {<<"gas">>, <<"0x5b8d80">>}
                ]}],
     maybe_binary(request(eth_sendTransaction, Params)).
 
