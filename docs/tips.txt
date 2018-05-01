@@ -1,3 +1,4 @@
+1. 启动私有链geth
 vi .bash_profile
 export PATH="/Users/guli1/Library/Application Support/Ethereum Wallet/binaries/Geth/unpacked:$PATH"
 source .bash_profile
@@ -7,10 +8,13 @@ geth attach
 
 先手动启动geth后，再启动Ethereum Wallet
 
-
-Ethereum Wallet删除CustomContracts：
+2. Ethereum Wallet删除CustomContracts：
 开发者工具->钱包界面->console
 CustomContracts.find().fetch()
 CustomContracts.remove(_id)
 Transactions.find().fetch()
 Transactions.remove(_id)
+
+3. 删除所有数据
+geth removedb
+
