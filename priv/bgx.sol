@@ -38,13 +38,13 @@ contract BGCToken {
     //                                  0xA7FF388DAfD240505f9a1d3ca37c15E058B9D4ea]; // 基石地址，7个
     //address[] preIcoAddresses = [0x4d1Ffd49d47552adcaf1729b9C4A2320419b81E1]; // PreICO地址，1个
 
-    uint256 startTime = $START_TIME; // 开始时间戳，UTC-0
-    uint256 endTime = $END_TIME; // 结束时间戳，UTC-0
-    uint256 lockEndTime = $LOCK_END_TIME; // 锁定结束时间戳，UTC-0
+    uint256 startTime = $START_TIME; // 开始时间戳，UTC-8
+    uint256 endTime = $END_TIME; // 结束时间戳，UTC-8
+    uint256 lockEndTime = $LOCK_END_TIME; // 锁定结束时间戳，UTC-8
 
-    //uint256 startTime = 1525708800; // 开始时间戳，2018/5/8 0:0:0 UTC-0
-    //uint256 endTime = 1528473600; // 结束时间戳，2018/6/9 0:0:0 UTC-0
-    //uint256 lockEndTime = 1528473600; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-0
+    //uint256 startTime = 1525708800; // 开始时间戳，2018/5/8 0:0:0 UTC-8
+    //uint256 endTime = 1528473600; // 结束时间戳，2018/6/9 0:0:0 UTC-8
+    //uint256 lockEndTime = 1528473600; // 锁定结束时间戳，2018/6/9 0:0:0 UTC-8
     // <====== 正式发布需要修正的参数
 
     uint256 public decimals = 18;

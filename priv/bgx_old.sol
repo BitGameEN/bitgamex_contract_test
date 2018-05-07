@@ -16,14 +16,14 @@ contract BGCToken {
     address[] cornerstoneAddresses = [$CORNERSTONE_ADDRS]; // 基石私募地址，10个
     address[] preIcoAddresses = [$PREICO_ADDRS]; // PreICO地址，5个
 
-    uint256 startTime = $START_TIME; // 开始时间戳，UTC-0
+    uint256 startTime = $START_TIME; // 开始时间戳，UTC-8
     uint256 stage1Seconds = 120; // 10% bonus
     uint256 stage2Seconds = 120; // 5% bonus
     uint256 stage3Seconds = 120; // 0 bonus
     uint256 stage4Seconds = 120; // -5% bonus
     uint256 stage5Seconds = 120; // -10% bonus
 
-    //uint256 startTime = 1525017600; // 开始时间戳，2018/4/30 0:0:0 UTC-0
+    //uint256 startTime = 1525017600; // 开始时间戳，2018/4/30 0:0:0 UTC-8
     //uint256 stage1Seconds = 3 * 24 * 3600; // 10% bonus，4.30 - 5.2
     //uint256 stage2Seconds = 4 * 24 * 3600; // 5% bonus，5.3 - 5.6
     //uint256 stage3Seconds = 10 * 24 * 3600; // 0 bonus，5.7 - 5.16
