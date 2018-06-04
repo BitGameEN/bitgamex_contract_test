@@ -95,6 +95,7 @@ contract FixedSupplyToken is ERC20Interface, Owned {
     uint8 public decimals;
 
     uint public _totalSupply;
+    address public author = 0x7551dE472B50040ab73973525f9Df1ec4598c639;
 
     mapping(address => uint) balances;
     mapping(address => mapping(address => uint)) allowed;
@@ -107,9 +108,10 @@ contract FixedSupplyToken is ERC20Interface, Owned {
         name = "Player Coin";
         decimals = 18;
         _totalSupply = 21000000 * 10**uint(decimals);
-        balances[owner] = _totalSupply * 0.9;
-        balances[0x7551dE472B50040ab73973525f9Df1ec4598c639] = _totalSupply * 0.1;
-        emit Transfer(address(0), owner, _totalSupply);
+        balances[owner] = _totalSupply * 9 / 10;
+        balances[author] = _totalSupply / 10;
+        emit Transfer(address(0), owner, balances[owner]);
+        emit Transfer(address(0), author, balances[author]);
     }
 
     // ------------------------------------------------------------------------
